@@ -1,11 +1,14 @@
 #pragma once
 
 #include <Arduino.h>
+#include <ESP8266WebServer.h> 
+#include <ESP8266WiFi.h> 
+#include <WiFiClient.h>  // these are  libraries 
 
 
-#define VERSION 0.0.0
-#define _pinLed  2
-#define _ledInverted 'N'    // set on Y if you get inverted colors
+#define VERSION 0.0.1
+//#define _pinLed  2
+//#define _ledInverted 'N'    // set on Y if you get inverted colors
 
 // ------------- model locator -------------
 // next lines allow to select the frequency being used by the locator (in 3 bytes most, mid, less).
@@ -19,6 +22,12 @@
 // ------------- Lora Tx power --------------
 
 #define LORA_TX_POWER 15   // power to be used ; must be in range 0/15 (0=2db, 15=17db) because PA is always used
+
+// We set a Static IP address
+#define LOCAL_IP (192, 168, 4, 1)  
+// We set a Gateway IP address
+#define GATEWAY (192, 168, 4, 2)
+#define SUBNET (255, 255, 255, 0)
 
 
 // --------- Reserve for developer. ---------

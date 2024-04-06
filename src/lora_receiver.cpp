@@ -169,7 +169,7 @@ void initSpi(){     // configure the SPI
     } else {
         locatorInstalled = true;
     }
-    Serial.print("lora Version= ");Serial.println(loraVersion, HEX) ;
+    //Serial.print("lora Version= ");Serial.println(loraVersion, HEX) ;
 }
 
 //shifts out 8 bits of data

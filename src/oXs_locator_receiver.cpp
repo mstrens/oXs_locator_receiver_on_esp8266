@@ -8,10 +8,14 @@
 #include <string> // header file for string
 using namespace std; 
 
-// to do : manage the led depending on the status; e.g. handle the led functions
-// test that password is not mandatory
-// write the readme (with e.g. the gpio
-// avoid config file
+// to do 
+
+
+// We set a Static IP address
+IPAddress local_IP LOCAL_IP;
+// We set a Gateway IP address
+IPAddress gateway GATEWAY;
+IPAddress subnet SUBNET;
 
 
 ESP8266WebServer server(80); 
@@ -229,11 +233,15 @@ void setup() {
  
     WiFi.softAP(ssid, password);
  
-    IPAddress apip = WiFi.softAPIP(); // Get the IP server
+
+    WiFi.softAPConfig (local_IP, gateway, subnet);
+    IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
+
+
     Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
     Serial.println(ssid);
     Serial.print("Visit this IP : ");
-    Serial.print(apip); // Prints the IP address of the server to be visited
+    Serial.print(apip2); // Prints the IP address of the server to be visited
     Serial.println(" in your browser.");
     
     server.on("/", response); 
