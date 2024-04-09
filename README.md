@@ -31,10 +31,12 @@ This version is different because:
     * the locator receiver is not in use (power off).
     * oXs is installed in the model and transmits the sensor data's over the normal RC Rx/Tx link. The SX1276 module in oXs listen to the locator receiver from time to time (but does not tranmit) 
 * When a model is lost:
-    * the locator receiver" is powered on. It starts sending requests to oXs.    
+    * the locator receiver" is powered on.    
     * When oXs (the SX1276/RFM95 module) receives a request, it replies with a small message containing the GPS coordinates and some data over the quality of the signal.
     * the locator receiver store those data's as wel as the quality of the signal received and the time enlapsed since the last received message.
-    * to view the data's, you have to use your GSM and connect it in wifi to the locator receiver. The locator should apear in the list of wifi server under the name "oXs_locator". Getting access does not require a password.
+    * to view the data's, you have to activate the Wifi on the locator receiver. To do so, press the button connected between D1 (gpio5)and D3 (gpio0) on wemos D1 mini.
+    * the locator should then appear as a wifi device on your GSM under the name "oXs_locator".
+    * connect your GSM to oXs_locator. This does not require a password.
     * once the GSM is connected to oXs_locator wifi server, you have to start your browser and enter as url "192.168.4.1"
     * you should then get some data (e.g. longitude and latitude if oXs has a gps)
     * a link allows you to access a map (via Google Map) to view the location. Still to use this link, you have first to disconnect your GSM from oXS_locator wifi in order to let it access to the web. Once the connection to the web established via e.g. your telephone provider (sim card), you can click on the link to let the GSM display the map.
@@ -53,7 +55,7 @@ An oXs device with a SX1276/RFM95 does not perturb the 2.4G link and consumes on
 Note: the locator transmitter stay in sleep mode most of the time. Once every 55 sec, it starts listening to the receiver for 5 sec. If the receiver is not powered on, the transmitter never get a request and so never sent data.
 When powered on, the receiver sent a request every 1 sec. At least 55 sec later (when entering listening mode), the transmitter should get this request and then reply immediately. It will then reply to each new request (so every 1 sec). It go back to the sleep mode if it does not get a request within the 60 sec.
 
-
+Note: At power on, the locator receiver does not activate the wifi in order to avoid interference with your 2.4G receiver if the locator receiver is installed in a model. That is the reason why a push button has been foreseen. 
 
 To build oXs, please check and use the project "oXs_on_RP2040" (on github) 
 
@@ -67,6 +69,8 @@ To build oXs, please check and use the project "oXs_on_RP2040" (on github)
 |MISO     | MISO| |
 |Grnd|Grnd
 |3.3V|Vcc|
+
+You have also to install a push button between gpio 5 and gpio 0 (pin D1 and D3 on a wemos D1 mini). 
 
 
 ## ------------------ Led -------------------

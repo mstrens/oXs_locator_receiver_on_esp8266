@@ -10,7 +10,7 @@ using namespace std;
 
 // to do 
 
-
+bool wifiEnabled = false;
 // We set a Static IP address
 IPAddress local_IP LOCAL_IP;
 // We set a Gateway IP address
@@ -224,37 +224,56 @@ void handleLed(){    // set the colors based on the RF link
     digitalWrite(LED, statusLed);  
 }
 
+#define BUTTON_OUT_GROUND 5 // = D1 on Wemos mini D1
+#define BUTTON_IN_PULLUP 0  // = D3 on wemos mini D1
 
+void setupWifi(){
+    static bool alreadyReadHigh = false;
+    if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
+        alreadyReadHigh = true;
+        return;
+    }     
+    if (digitalRead(BUTTON_IN_PULLUP) == 0) {
+        WiFi.softAP(ssid, password);
+        WiFi.softAPConfig (local_IP, gateway, subnet);
+        IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
+        Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
+        Serial.println(ssid);
+        Serial.print("Visit this IP : ");
+        Serial.print(apip2); // Prints the IP address of the server to be visited
+        Serial.println(" in your browser.");
+        
+        server.on("/", response); 
+        //server.on("/LEDOn", handleLedOn);
+        //server.on("/LEDOff", handleLedOff);
+    
+        server.begin(); // Start the server
+        Serial.println("HTTP server beginned");
+        wifiEnabled = true;
+    }    
+} 
 
 void setup() {
     delay(1000); 
     Serial.begin(115200);
     Serial.println();
- 
-    WiFi.softAP(ssid, password);
- 
-
-    WiFi.softAPConfig (local_IP, gateway, subnet);
-    IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
-
-
-    Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
-    Serial.println(ssid);
-    Serial.print("Visit this IP : ");
-    Serial.print(apip2); // Prints the IP address of the server to be visited
-    Serial.println(" in your browser.");
-    
-    server.on("/", response); 
-    //server.on("/LEDOn", handleLedOn);
-    //server.on("/LEDOff", handleLedOff);
- 
-    server.begin(); // Start the server
-    Serial.println("HTTP server beginned");
-   
+  
     pinMode(LED, OUTPUT);
     digitalWrite(LED, statusLed);
+    pinMode(BUTTON_OUT_GROUND, OUTPUT);
+    digitalWrite(BUTTON_OUT_GROUND, LOW);
+    pinMode(BUTTON_IN_PULLUP , INPUT_PULLUP);
+    delay(1000);
 }
  
+void debugButton(){
+    static uint32_t lastRead;
+    if ((millis() - lastRead) > 500) {
+        Serial.print(wifiEnabled); Serial.println(digitalRead(BUTTON_IN_PULLUP));
+        lastRead = millis();
+    }
+}
+
 void loop()
 { 
     // fill loraRxPacketRssi , loraRxPacketSnr , lastGpsLat ,  lastGpsLon , oXsGpsPdop , oXsLastGpsDelay , oXsPacketRssi
@@ -267,7 +286,11 @@ void loop()
         }
     }
     handleLed(); // change led depending on ledState
-    server.handleClient(); // this manage the wifi process (when client connect, it call response()) 
+    //debugButton();
+    if (wifiEnabled == false) setupWifi() ; // check if wifi button is pressed; when pressed, start wifi and change flag wifiEnabled to true
+    if (wifiEnabled) {
+        server.handleClient(); // this manage the wifi process (when client connect, it call response()) 
+    }
 }
 
     /*
