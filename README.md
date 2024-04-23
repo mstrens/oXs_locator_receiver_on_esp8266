@@ -80,7 +80,7 @@ When a Wemos D1 mini is used, there is a led on gpio 12.
 * when led is blinking, the locator receiver got a connection but lost it since more than 1 sec. So some data's are available but are not refreshed.
 
 ## --------- Software -------------------
-This software has been developped using the platformio and arduino ide.
+This software has been developped using visual code, platformio and arduino.
 
 
-Please look at internet to find tutorial on how to install platformio.
+To use those tools, compile and flash your device, please look at the pdf document named "compilation of oXs Locator receiver using ES8266" present in this project.

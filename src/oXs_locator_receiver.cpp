@@ -229,6 +229,7 @@ void handleLed(){    // set the colors based on the RF link
 
 void setupWifi(){
     static bool alreadyReadHigh = false;
+    // we wait to have first a level HIGH (before looking for a low level )
     if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
         alreadyReadHigh = true;
         return;
