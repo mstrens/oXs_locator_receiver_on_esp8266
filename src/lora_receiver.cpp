@@ -277,16 +277,19 @@ uint8_t  loraHandle(){
         if (locatorInstalled){
             loraSetup() ; // init lora with some set up that need to be done only once
             loraState = LORA_START_TO_TRANSMIT ;
+        } else {
+            Serial.println("RFM95 is not detected") ;
         }
+
         break ;
     case  LORA_START_TO_TRANSMIT :
         // 2 lines to debug usb issue
         loraFillTxPacket() ; // set mode to standby, fill fifo with data to be sent (2 bytes)  
         loraTxOn(LORA_TX_POWER & 0x0F ) ; // set TxOn  Txpower = 15=max, )  // set lora in transmit mode
-        loraNextTransmitMillis = currentMillis + NEXT_TRANSMIT_TIME ; // setup next transmit time
+        loraNextTransmitMillis = currentMillis + NEXT_TRANSMIT_TIME ; // setup next transmit time (one transmit per sec)
         loraMaxEndTransmitMillis = currentMillis + 200 ;  // Transmission must be done within this time
         loraState = LORA_WAIT_END_OF_TRANSMIT ;
-        //Serial.println("transmit one packet") ; // to debug
+        Serial.println("Transmit one packet") ; // to debug
         break;
     case  LORA_WAIT_END_OF_TRANSMIT :
         // check if transmit is done or if timeout occurs
@@ -294,6 +297,7 @@ uint8_t  loraHandle(){
         // else, if timeOut, go in sleep for the SLEEP_TIME
         loraIrqFlags = loraReadRegister(LORA_REG_IRQ_FLAGS);
         if ( loraIrqFlags & IRQ_TX_DONE_MASK ) {
+            Serial.println("Packet sent; wait 700ms for a reply") ;
             loraRxOn();
             loraState = LORA_IN_RECEIVE ; 
             loraStateMillis = currentMillis + RECEIVE_TIME ; // normally wait a reply within 700 msec
@@ -301,7 +305,7 @@ uint8_t  loraHandle(){
 
         } else if ( currentMillis > loraMaxEndTransmitMillis  ) { // loraStateMillis
           //  Serial.print("irqFlag="); Serial.print(loraIrqFlags,HEX); Serial.print("  ");
-          //  Serial.println("Packet not sent within the delay") ;
+            Serial.println("Packet not sent within the delay; go to sleep") ;
             loraInSleep() ;
             loraState = LORA_IN_SLEEP ;
         }
@@ -318,9 +322,9 @@ uint8_t  loraHandle(){
           if ( loraIrqFlags & IRQ_PAYLOAD_CRC_ERROR_MASK) {
             loraInSleep() ;
             loraState = LORA_IN_SLEEP;
-            //printf("!\n"); 
+            printf("Received a packet with wrong crc\n"); 
           } else {
-              //Serial.println("packet received"); 
+              Serial.println("Good packet received; go to sleep"); 
               loraReadPacket() ; // read the data in fifo 6 bytes 
               loraInSleep() ;
               loraState = LORA_IN_SLEEP;
@@ -328,6 +332,7 @@ uint8_t  loraHandle(){
               
           }
         } else if (currentMillis > loraStateMillis) {   // back to sleep if we did not receive a packet within the expected time
+           Serial.println("No packet received within the 700 ms; go to sleep") ;
            loraInSleep() ;
            loraState = LORA_IN_SLEEP ;
         }
