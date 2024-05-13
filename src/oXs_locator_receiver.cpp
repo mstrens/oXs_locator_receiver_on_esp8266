@@ -236,14 +236,27 @@ void setupWifi(){
         return;
     }     
     if (digitalRead(BUTTON_IN_PULLUP) == 0) {
-        WiFi.softAP(ssid, password);
-        WiFi.softAPConfig (local_IP, gateway, subnet);
-        IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
-        Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
-        Serial.println(ssid);
-        Serial.print("Visit this IP : ");
-        Serial.print(apip2); // Prints the IP address of the server to be visited
-        Serial.println(" in your browser.");
+        Serial.print("Setting soft-AP configuration ... ");
+  Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
+
+  Serial.print("Setting soft-AP ... ");
+  Serial.println(WiFi.softAP(ssid,password) ? "Ready" : "Failed!");
+  delay(100);
+  //WiFi.softAP(ssid);
+  //WiFi.softAP(ssid, password, channel, hidden, max_connection)
+  
+  Serial.print("Visit this IP address in your browser = ");
+  Serial.println(WiFi.softAPIP());
+  delay(100);      
+        
+        //WiFi.softAP(ssid, password);
+        //WiFi.softAPConfig (local_IP, gateway, subnet);
+        //IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
+        //Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
+        //Serial.println(ssid);
+        //Serial.print("Visit this IP : ");
+        //Serial.print(apip2); // Prints the IP address of the server to be visited
+        //Serial.println(" in your browser.");
         
         server.on("/", response); 
         //server.on("/LEDOn", handleLedOn);

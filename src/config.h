@@ -6,7 +6,7 @@
 #include <WiFiClient.h>  // these are  libraries 
 
 
-#define VERSION 0.0.4
+#define VERSION 0.0.5
 //#define _pinLed  2
 //#define _ledInverted 'N'    // set on Y if you get inverted colors
 

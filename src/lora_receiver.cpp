@@ -116,11 +116,11 @@
 #define LORA_START_TO_TRANSMIT 3           //fill lora with data to be send and ask for sending (but do not wait), change mode to LORA_WAIT_END_OF_TRANSMIT
 #define LORA_WAIT_END_OF_TRANSMIT 4   //wait that pakage has been sent (or wait max x sec)
 
-#define TX_FRF_MSB   0xC0   // F / 32E6 * 256 * 256 * 8
+#define TX_FRF_MSB   0xD9   // 0XD90000 = code for 868Mhz = 868000000 << 19 / 32000000
 #define TX_FRF_MID   0x00   
 #define TX_FRF_LSB   0x00
 
-#define RX_FRF_MSB   0xC0
+#define RX_FRF_MSB   0xD9
 #define RX_FRF_MID   0x00   
 #define RX_FRF_LSB   0x00
 

@@ -14,7 +14,7 @@
             "name": "PIO Debug",
             "executable": "c:/Data/oXs_locator_receiver_on_esp8266/.pio/build/d1_mini/firmware.elf",
             "projectEnvName": "d1_mini",
-            "toolchainBinDir": "C:/Users/Acer/.platformio/packages/toolchain-xtensa/bin",
+            "toolchainBinDir": "C:/Users/pc/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
@@ -27,7 +27,7 @@
             "name": "PIO Debug (skip Pre-Debug)",
             "executable": "c:/Data/oXs_locator_receiver_on_esp8266/.pio/build/d1_mini/firmware.elf",
             "projectEnvName": "d1_mini",
-            "toolchainBinDir": "C:/Users/Acer/.platformio/packages/toolchain-xtensa/bin",
+            "toolchainBinDir": "C:/Users/pc/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart"
         },
         {
@@ -36,7 +36,7 @@
             "name": "PIO Debug (without uploading)",
             "executable": "c:/Data/oXs_locator_receiver_on_esp8266/.pio/build/d1_mini/firmware.elf",
             "projectEnvName": "d1_mini",
-            "toolchainBinDir": "C:/Users/Acer/.platformio/packages/toolchain-xtensa/bin",
+            "toolchainBinDir": "C:/Users/pc/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "loadMode": "manual"
         }
