@@ -262,6 +262,8 @@ void loraDump(){
 #define NEXT_TRANSMIT_TIME 1000  // wait 1000 msec max for a packet being sent
 #define RECEIVE_TIME 700  // wait 700 msec max for a packet being received
 
+//#define DEBUG_LORA_STATE
+
 uint8_t  loraHandle(){ 
   uint8_t returnCode = 0 ; // just for debugging (= 1 is we are just transmitting)
   uint8_t loraIrqFlags ;
@@ -289,7 +291,9 @@ uint8_t  loraHandle(){
         loraNextTransmitMillis = currentMillis + NEXT_TRANSMIT_TIME ; // setup next transmit time (one transmit per sec)
         loraMaxEndTransmitMillis = currentMillis + 200 ;  // Transmission must be done within this time
         loraState = LORA_WAIT_END_OF_TRANSMIT ;
+        #ifdef DEBUG_LORA_STATE
         Serial.println("Transmit one packet") ; // to debug
+        #endif
         break;
     case  LORA_WAIT_END_OF_TRANSMIT :
         // check if transmit is done or if timeout occurs
@@ -297,7 +301,9 @@ uint8_t  loraHandle(){
         // else, if timeOut, go in sleep for the SLEEP_TIME
         loraIrqFlags = loraReadRegister(LORA_REG_IRQ_FLAGS);
         if ( loraIrqFlags & IRQ_TX_DONE_MASK ) {
+            #ifdef DEBUG_LORA_STATE
             Serial.println("Packet sent; wait 700ms for a reply") ;
+            #endif
             loraRxOn();
             loraState = LORA_IN_RECEIVE ; 
             loraStateMillis = currentMillis + RECEIVE_TIME ; // normally wait a reply within 700 msec
@@ -305,7 +311,9 @@ uint8_t  loraHandle(){
 
         } else if ( currentMillis > loraMaxEndTransmitMillis  ) { // loraStateMillis
           //  Serial.print("irqFlag="); Serial.print(loraIrqFlags,HEX); Serial.print("  ");
+            #ifdef DEBUG_LORA_STATE
             Serial.println("Packet not sent within the delay; go to sleep") ;
+            #endif
             loraInSleep() ;
             loraState = LORA_IN_SLEEP ;
         }
@@ -324,7 +332,9 @@ uint8_t  loraHandle(){
             loraState = LORA_IN_SLEEP;
             printf("Received a packet with wrong crc\n"); 
           } else {
+              #ifdef DEBUG_LORA_STATE
               Serial.println("Good packet received; go to sleep"); 
+              #endif
               loraReadPacket() ; // read the data in fifo 6 bytes 
               loraInSleep() ;
               loraState = LORA_IN_SLEEP;
@@ -332,9 +342,11 @@ uint8_t  loraHandle(){
               
           }
         } else if (currentMillis > loraStateMillis) {   // back to sleep if we did not receive a packet within the expected time
-           Serial.println("No packet received within the 700 ms; go to sleep") ;
-           loraInSleep() ;
-           loraState = LORA_IN_SLEEP ;
+           #ifdef DEBUG_LORA_STATE
+            Serial.println("No packet received within the 700 ms; go to sleep") ;
+            #endif
+            loraInSleep() ;
+            loraState = LORA_IN_SLEEP ;
         }
         break;
     

@@ -229,7 +229,7 @@ void handleLed(){    // set the colors based on the RF link
 
 void setupWifi(){
     static bool alreadyReadHigh = false;
-    if (wifiEnabled == false) return; // avoid to start twice the wifi
+    if (millis() < 1000) return;
     // we wait to have first a level HIGH (before looking for a low level )
     if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
         alreadyReadHigh = true;
@@ -301,7 +301,7 @@ void loop()
         }
     }
     handleLed(); // change led depending on ledState
-    //debugButton();
+    debugButton();
     if (wifiEnabled == false) setupWifi() ; // check if wifi button is pressed; when pressed, start wifi and change flag wifiEnabled to true
     if (wifiEnabled) {
         server.handleClient(); // this manage the wifi process (when client connect, it call response()) 
