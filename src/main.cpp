@@ -228,26 +228,27 @@ void handleLed(){    // set the colors based on the RF link
 #define BUTTON_IN_PULLUP 0  // = D3 on wemos mini D1
 
 void setupWifi(){
-    static bool alreadyReadHigh = false;
-    if (millis() < 1000) return;
+//    static bool alreadyReadHigh = false;
+//    if (millis() < 5000) return;
     // we wait to have first a level HIGH (before looking for a low level )
-    if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
-        alreadyReadHigh = true;
-        return;
-    }     
+//    if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
+//        alreadyReadHigh = true;
+//        return;
+//    }     
+    if (millis() < 5000) return;
     if (digitalRead(BUTTON_IN_PULLUP) == 0) {
         Serial.print("Setting soft-AP configuration ... ");
-  Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
+        Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
 
-  Serial.print("Setting soft-AP ... ");
-  Serial.println(WiFi.softAP(ssid,password) ? "Ready" : "Failed!");
-  delay(100);
-  //WiFi.softAP(ssid);
-  //WiFi.softAP(ssid, password, channel, hidden, max_connection)
-  
-  Serial.print("Visit this IP address in your browser = ");
-  Serial.println(WiFi.softAPIP());
-  delay(100);      
+        Serial.print("Setting soft-AP ... ");
+        Serial.println(WiFi.softAP(ssid,password) ? "Ready" : "Failed!");
+        delay(100);
+        //WiFi.softAP(ssid);
+        //WiFi.softAP(ssid, password, channel, hidden, max_connection)
+        
+        Serial.print("Visit this IP address in your browser = ");
+        Serial.println(WiFi.softAPIP());
+        delay(100);      
         
         //WiFi.softAP(ssid, password);
         //WiFi.softAPConfig (local_IP, gateway, subnet);
@@ -269,7 +270,6 @@ void setupWifi(){
 } 
 
 void setup() {
-    delay(1000); 
     Serial.begin(115200);
     Serial.println();
   
@@ -278,13 +278,19 @@ void setup() {
     pinMode(BUTTON_OUT_GROUND, OUTPUT);
     digitalWrite(BUTTON_OUT_GROUND, LOW);
     pinMode(BUTTON_IN_PULLUP , INPUT_PULLUP);
-    delay(1000);
+    Serial.println("Press the button to activate the wifi");
+    
 }
  
 void debugButton(){
     static uint32_t lastRead;
-    if ((millis() - lastRead) > 500) {
-        Serial.print(wifiEnabled); Serial.println(digitalRead(BUTTON_IN_PULLUP));
+    if ((millis() - lastRead) > 1000) {
+        if (wifiEnabled) {
+            Serial.println("Wifi server is enabled");
+        } else {
+            Serial.println("Wifi server is not enabled");
+        }
+        //Serial.print(wifiEnabled); Serial.println(digitalRead(BUTTON_IN_PULLUP));
         lastRead = millis();
     }
 }
