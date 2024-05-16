@@ -236,6 +236,7 @@ void setupWifi(){
 //        return;
 //    }     
     if (millis() < 5000) return;
+    //Serial.print("millis="); Serial.println(millis());
     if (digitalRead(BUTTON_IN_PULLUP) == 0) {
         Serial.print("Setting soft-AP configuration ... ");
         Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
