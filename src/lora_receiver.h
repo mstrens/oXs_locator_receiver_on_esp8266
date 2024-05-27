@@ -12,13 +12,15 @@ uint8_t loraReadRegister(uint8_t reg) ;                // Read a LORA register; 
 void loraReadRegisterBurst( uint8_t reg, uint8_t* dataIn, uint8_t numBytes) ;
 void loraWriteRegisterBurst( uint8_t reg, uint8_t* dataOut, uint8_t numBytes) ;
 
-uint8_t loraHandle();
-void loraSetup() ;         // parameters that are set only once
+void loraHandle();
+bool loraSetup() ;         // parameters that are set only once
 void loraTxOn(uint8_t txPower);
 void loraRxOn() ;
 void loraInSleep() ;
 void loraReadPacket() ;           // read a packet with 2 bytes ; packetType and TxPower
 void loraFillTxPacket() ;
+
+void loraReceiveOn(uint8_t length, uint32_t timeout) ;
 
 
 
