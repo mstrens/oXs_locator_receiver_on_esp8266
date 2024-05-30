@@ -326,6 +326,7 @@ void setup()
     pinMode(LED, OUTPUT);
     digitalWrite(LED, statusLed);
     
+    delay(2000); // to have time to get first messages
     pinMode(BUTTON_IN_PULLUP, INPUT_PULLUP);
     Serial.println("Press the button to activate the wifi");
 

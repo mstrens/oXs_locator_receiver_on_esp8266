@@ -6,24 +6,23 @@
 #include <WiFiClient.h>  // these are  libraries 
 #include "sx126x_driver.h"
 
-#define VERSION 0.1.0
+#define VERSION 0.1.1
 //#define _pinLed  2
 //#define _ledInverted 'N'    // set on Y if you get inverted colors
 
 // ------------- model locator with E220M900S22-------------
-#define SPI_CS 15   // = D8
-#define LORA_BUSY 16
+#define SPI_CS 15   // = D8 on wemos d1 mini
+#define LORA_BUSY 16  // = D0 on wemos d1 mini
 
 // next lines allow to select the frequency being used by the locator (in 3 bytes most, mid, less).
 // It must be the same values on oXs side and on locator receiver side
 // We use the same frequency for transmit and receive
 #define LOCATOR_FREQUENCY 868000000UL // in Hz
 
-#define LORA_TX_POWER 17   // power to be used ; must be in range 0/22 (0=2db, 225=22db) because PA is always used
+#define _power 0x10      // use 0x16 for 22 db; power to be used ; must be in range 0/22 (0=2db, 225=22db) because PA is always used
 
 #define _paDutyCycle 0x02 // this is for 17 db; for 22 db, it must be 04
 #define _hpMax 0x03       // this is for 17 db; for 22 db, it must be 07
-#define _power 0x11      // use 0x16 for 22 db
 
 // Define modulation parameters setting
 // range increases (and time over the air too) when sf increases and BW decrease 

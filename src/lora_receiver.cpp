@@ -30,7 +30,7 @@ uint32_t rfFrequency = LOCATOR_FREQUENCY;
 uint8_t paDutyCycle = _paDutyCycle; 
 uint8_t hpMax = _hpMax;       
 uint8_t deviceSel = 0x00;   // must always be 0
-uint8_t power = LORA_TX_POWER;       
+uint8_t power = _power;       
 
 // Define modulation parameters setting
 uint8_t sf = _sf;                 // spreading factor 7; can be between 5 and 11 (higher = higher range)
@@ -316,10 +316,11 @@ bool loraSetup()
     sx126x_begin(); // set gpio nsspin as output, bussy as input, make spi.begin() ; frequency is set in each transfert
 
     // Set to standby mode
-    sx126x_setStandby(SX126X_STANDBY_XOSC); // RC set in standby using 13Mhz rc; can also be SX126X_STANDBY_XOSC for 32Mz xtal
+    sx126x_setStandby(SX126X_STANDBY_RC); // RC set in standby using 13Mhz rc; can also be SX126X_STANDBY_XOSC for 32Mz xtal
     uint8_t mode;
     sx126x_getStatus(&mode); // get the status
-    if (((mode & 0x70) != SX126X_STATUS_MODE_STDBY_XOSC) and ((mode & 0x70) != SX126X_STATUS_MODE_STDBY_RC))
+    Serial.print("status= "); Serial.println(mode,HEX); 
+    if ((mode & 0x70) !=  SX126X_STATUS_MODE_STDBY_RC)
     { // to compare with SX126X_STATUS_MODE_STDBY_RC when no xtal
         Serial.println("Something wrong, can't set to standby mode");
         return false;
@@ -332,6 +333,9 @@ bool loraSetup()
 
     // Set packet type to LoRa
     sx126x_setPacketType(SX126X_LORA_MODEM);
+    uint8_t packetType=10;
+    sx126x_getPacketType(&packetType);
+    Serial.print("packet type = "); Serial.println(packetType,HEX); 
 
     // Set frequency to selected frequency (rfFrequency = rfFreq * 32000000 / 2 ^ 25)
     Serial.print("Set frequency to ");
@@ -353,6 +357,10 @@ bool loraSetup()
     // Configure packet parameter with predefined preamble length, header mode type, payload length, crc type, and invert iq option
     sx126x_setPacketParamsLoRa(preambleLength, headerType, payloadLength, crcType, invertIq);
 
+    // enable interruptmask 
+    sx126x_setDioIrqParams(0XFFFF, 0, 0, 0);
+    
+    
     // Set predefined syncronize word
     sx126x_writeRegister(SX126X_REG_LORA_SYNC_WORD_MSB, sw, 2);
 
@@ -377,13 +385,13 @@ bool loraSetup()
 void loraTransmit(char *message, uint8_t length, uint32_t timeout)
 {
 
-    Serial.println("\n-- TRANSMIT FUNCTION --");
+    //Serial.println("\n-- TRANSMIT FUNCTION --");
 
     // Write the message to buffer
     uint8_t *msgUint8 = (uint8_t *)message;
-    Serial.print("Write message \'");
-    Serial.print(message);
-    Serial.println("\' in buffer");
+    //Serial.print("Write message \'");
+    //Serial.print(message);
+    //Serial.println("\' in buffer");
     Serial.print("Message in bytes : [ ");
     sx126x_writeBuffer(0x00, msgUint8, length);
     for (uint8_t i = 0; i < length; i++)
@@ -394,9 +402,9 @@ void loraTransmit(char *message, uint8_t length, uint32_t timeout)
     Serial.println("]");
 
     // Set payload length same as message length
-    Serial.print("Set payload length same as message length (");
-    Serial.print(length);
-    Serial.println(")");
+    //Serial.print("Set payload length same as message length (");
+    //Serial.print(length);
+    //Serial.println(")");
     sx126x_setPacketParamsLoRa(preambleLength, headerType, length, crcType, invertIq);
 
     // Activate interrupt when transmit done on DIO1
@@ -416,13 +424,20 @@ void loraTransmit(char *message, uint8_t length, uint32_t timeout)
     uint16_t irqStat;
     sx126x_getIrqStatus(&irqStat);
     Serial.println("Clear IRQ status");
-    sx126x_clearIrqStatus(irqStat);
+    sx126x_clearIrqStatus(0XFFFF);
 
     // Calculate timeout (timeout duration = timeout * 15.625 us)
     uint32_t tOut = timeout * 64;
     // Set RF module to TX mode to transmit message
     Serial.println("Transmitting LoRa packet");
     sx126x_setTx(tOut);
+    uint8_t statusTx = 0;
+    sx126x_getStatus(&statusTx);
+    Serial.print("status after Tx="); Serial.println(statusTx,HEX);
+    uint16_t devErr = 0;
+    sx126x_getDeviceErrors(&devErr);
+    Serial.print("error after Tx="); Serial.println(devErr,HEX);
+    
 }
 
 void loraReceiveOn(uint8_t length, uint32_t timeout)
@@ -440,12 +455,12 @@ void loraReceiveOn(uint8_t length, uint32_t timeout)
     uint16_t irqStat;
     sx126x_getIrqStatus(&irqStat);
     Serial.println("Clear IRQ status");
-    sx126x_clearIrqStatus(irqStat);
+    sx126x_clearIrqStatus(0XFFFF);
 
     // Calculate timeout (timeout duration = timeout * 15.625 us)
     uint32_t tOut = timeout * 64;
     // Set RF module to RX mode to receive message
-    Serial.println("Receiving LoRa packet within predefined timeout");
+    Serial.println("LoRa packet to be received within predefined timeout");
     sx126x_setRx(tOut);
 }
 
@@ -530,13 +545,15 @@ void loraDecodeFrame()
 #define NEXT_TRANSMIT_TIME 1000 // wait 1000 msec max for a packet being sent
 #define RECEIVE_TIME 700        // wait 700 msec max for a packet being received
 
-// #define DEBUG_LORA_STATE
+ #define DEBUG_LORA_STATE
 
 void loraHandle()
 {
     // uint8_t returnCode = 0 ; // just for debugging (= 1 is we are just transmitting)
     uint16_t loraIrqFlags;
     static uint8_t loraState = LORA_TO_INIT;
+        uint8_t sta1=0;
+    
     // static uint32_t loraStateMillis ;
     // static uint32_t loraNextTransmitMillis = 0;
 
@@ -575,12 +592,15 @@ void loraHandle()
         // if transmitted, put lora in receive, change loraState to LORA_IN_RECEIVE , change loraStateMillis = currentMillis+LONG_RECEIVE
         // else, if timeOut, go in sleep for the SLEEP_TIME
         sx126x_getIrqStatus(&loraIrqFlags);
+        if (loraIrqFlags !=0){
+            Serial.print("f=");Serial.println(loraIrqFlags,HEX);
+        }
         if (loraIrqFlags & SX126X_IRQ_TX_DONE)
         {
 #ifdef DEBUG_LORA_STATE
-            Serial.println("Packet sent; wait 700ms for a reply");
+            Serial.println("Packet sent; wait 1000ms for a reply");
 #endif
-            loraReceiveOn(6, 700); // expect 6 char within 700 msec
+            loraReceiveOn(6, 1000); // expect 6 char within 1000 msec
             loraState = LORA_IN_RECEIVE;
             // loraStateMillis = currentMillis + RECEIVE_TIME ; // normally wait a reply within 700 msec
             // returnCode = 1 ;  // 1 means that packet has been sent
@@ -593,6 +613,9 @@ void loraHandle()
 #endif
             loraState = LORA_START_TO_TRANSMIT;
         }
+        sx126x_getStatus(&sta1);
+        Serial.print("s=");Serial.println(sta1,HEX);
+        delay(100);
         break;
     // case  LORA_IN_SLEEP :
     //     if (currentMillis > loraNextTransmitMillis ){
@@ -600,8 +623,12 @@ void loraHandle()
     //     }
     //     break;
     case LORA_IN_RECEIVE:
-        // check if a packet has been received a correct CRC of if a tieout occured
+        // check if a packet has been received with a correct CRC of if a timeout occured
         sx126x_getIrqStatus(&loraIrqFlags);
+        if( loraIrqFlags !=0) {
+            Serial.print("irq while receiving="); Serial.println(loraIrqFlags,HEX);
+            delay(100);
+        }
         // loraIrqFlags = loraReadRegister(LORA_REG_IRQ_FLAGS);
         if (loraIrqFlags & SX126X_IRQ_RX_DONE)
         {
@@ -624,7 +651,7 @@ void loraHandle()
         else if (loraIrqFlags & SX126X_IRQ_TIMEOUT)
         { // back to sleep if we did not receive a packet within the expected time
 #ifdef DEBUG_LORA_STATE
-            Serial.println("No packet received within the 700 ms; go to sleep");
+            Serial.println("No packet received within the 700 ms; go to stransmit");
 #endif
             // loraInSleep() ;
             loraState = LORA_START_TO_TRANSMIT;
@@ -632,132 +659,3 @@ void loraHandle()
         break;
     } // end of switch
 }
-
-/*
-void loraSetup() {         // parameters that are set only once
-  loraWriteRegister(LORA_REG_OP_MODE,  0x00);           //RegOpMode, need to set to sleep mode before configure for LoRa mode
-  loraWriteRegister(LORA_REG_OP_MODE,  0x80);           // activate LORA mode and High frequency, stay in sleep mode
-  loraWriteRegister(LORA_REG_PA_CONFIG, 0x8F) ;         // activate PA_Boost and max power = 17 dBm
-  //loraWriteRegister(LORA_REG_PA_RAMP, 0x09)) ;         // keep default value
-  loraWriteRegister(LORA_REG_OCP, 0b00111011) ;         // current protection On with max value of 240 mA
-  loraWriteRegister(LORA_REG_LNA, 0x23) ;               // max gain in reception , boost on LNA
-  loraWriteRegister(LORA_REG_MODEM_CONFIG_1,0b01110011) ;// BW=125khz,CR=4/5,No header
-                                                          // bits 7-4 = BW; 0110 = 62.5Khz; 0111=125Khz
-                                                          // bits 3-1 = CR ; 001 = 4/5; 100=4/8
-                                                          //bit 0: 0=Explicit Header; 1=no Header
-  loraWriteRegister(LORA_REG_MODEM_CONFIG_2,0b10100100) ; // SF=10,One Tx packet,CrcOn, timeOutMsb=0
-                                                          // bits 7-4=SF ; from 6 up to 12
-                                                          // bit 3=TxContinous mode;0=one packet only
-                                                          // bit2=RxPayloadCrcON ; 1=Enable
-                                                          // bits1-0= SymbTimeOut(9:8) = MSB
-  loraWriteRegister(LORA_REG_SYMB_TIMEOUT_LSB, 0xFF) ;         // Receiver time out in single mode
-  //loraWriteRegister(LORA_REG_PREAMBLE_MSB, 0x00) ;     // keep 00 default value
-  loraWriteRegister(LORA_REG_PREAMBLE_LSB, 6) ;          // 6 preamble sysbols
-  loraWriteRegister(LORA_REG_MODEM_CONFIG_3, 0b00000100);  //
-                                                          // bit3=LowDataRateOptimize; 1=Enabled mandated when symbol length exceeds 16ms
-                                                          // bit2=AgcAutoOn; 1=LNA gain set by internal AGCloop instead of by register LnaGain
-}
-*/
-
-/*
-void loraTxOn(uint8_t txPower){
-  loraWriteRegister(LORA_REG_OP_MODE,  0x80 | LORA_STANDBY);
-    if ( txPower <= 15) {
-        loraWriteRegister(LORA_REG_PA_CONFIG, 0x80 | txPower) ; // use PA_boost (power is from 2 up to 17dBm
-    } else {                                                  // set max to 15 (=17 dbm)
-        loraWriteRegister(LORA_REG_PA_CONFIG, 0x80 | 15) ;
-    }
-  loraWriteRegister(LORA_REG_PA_DAC , 0x84 ) ;            // 0x84 = normal power (up to 17 dBm); 0x87= boost (20dBm)
-  loraWriteRegister(LORA_REG_FRF_MSB, TX_FRF_MSB);    //frequency (in steps of 61.035 Hz)
-  loraWriteRegister(LORA_REG_FRF_MID, TX_FRF_MID);
-  loraWriteRegister(LORA_REG_FRF_LSB, TX_FRF_LSB);
-  loraWriteRegister(LORA_REG_IRQ_FLAGS, 0xFF);       //reset interrupt flags
-  loraWriteRegister(LORA_REG_PAYLOAD_LENGTH,2);      // set payload on 2
-  loraWriteRegister(LORA_REG_OP_MODE,  0x80 | LORA_TX);
-}
-
-
-void loraRxOn(){
-  loraWriteRegister(LORA_REG_OP_MODE,  0x80);
-  loraWriteRegister(LORA_REG_FIFO_RX_BASE_ADDR, 0x00); // reset base Rx adress to 0
-  loraWriteRegister(LORA_REG_FRF_MSB, RX_FRF_MSB);    //frequency (in steps of 61.035 Hz)
-  loraWriteRegister(LORA_REG_FRF_MID, RX_FRF_MID);
-  loraWriteRegister(LORA_REG_FRF_LSB, RX_FRF_LSB);
-  loraWriteRegister(LORA_REG_IRQ_FLAGS, 0xFF);       //reset interrupt flags
-  loraWriteRegister(LORA_REG_PAYLOAD_LENGTH,6);      // set payload on 6 (because it is the same time on air as 5
-  loraWriteRegister(LORA_REG_OP_MODE,  0x80 | LORA_RXCONTINUOUS);
-}
-
-void loraInSleep(){
-  loraWriteRegister(LORA_REG_OP_MODE,  0x80);
-}
-
-void loraReadPacket() {            // read a packet with 6 bytes ;
-  // in order to stay with 6 bytes per packet, we will send 1 byte with
-  //         Bit 7/ 0 = Long, 1=Lat ; this is type of packet
-  //         Bit 6/3 = GPS accuracy 0= very good; 15 = bad (we discard decimal); it is gps_HDOP/128, if >15, then becomes 15
-  //         Bit 2 = gps oldier than than 1h
-  //         Bit 1 = oldier than 10 min
-  //         Bit 0 = oldier than 1 min
-  //         Then there is one byte with Rssi and 4 bytes for long/lat (or replaced by 00 if GPS is unavailable)
-  //         Note: gps_last_fix_lon and lat are filled with last value when a fix was available and if a fix has never been available they are filled with 0
-    // fill loraRxPacketRssi , loraRxPacketSnr , lastGpsLat ,  lastGpsLon , oXsGpsPdop , oXsLastGpsDelay , oXsPacketRssi
-
-
-  uint8_t loraRxBuffer[6] ;
-  uint8_t oXsPacketType ; // specify if oXs packet is long or lat
-  int32_t oXsGpsLonLat ;    // lon or lat sent by gps
-  atLeastOnePacketReceived = true;
-  loraLastPacketReceivedMillis = millis() ;
-  uint8_t loraRxPacketRssiU8;
-  uint8_t loraRxPacketSnrU8;
-  uint8_t signalRssiPktU8 ;
-
-  sx126x_getPacketStatus(&loraRxPacketRssiU8, &loraRxPacketSnrU8, & signalRssiPktU8);
-  loraRxPacketRssi = 0 - (((int) loraRxPacketRssiU8) >> 1); // rssi value = - U8/2
-  loraRxPacketSnr = ((float) loraRxPacketSnrU8) * 0.25  ;   // snr value = u8/4
-  uint8_t payloadLengthRx;
-  uint8_t rxStartBufferPointer[80];
-  sx126x_getRxBufferStatus(&payloadLengthRx, &rxStartBufferPointer);
-
-
-  loraWriteRegister(LORA_REG_FIFO_ADDR_PTR, 0);        //set RX FIFO ptr
-  loraWriteRegister(LORA_REG_OP_MODE, 0x80 | LORA_STANDBY) ; //  set mode in standby (to read FIFO)
-  loraReadRegisterBurst( LORA_REG_FIFO , loraRxBuffer, 6) ; // read the 6 bytes in lora fifo
-  oXsPacketType = (loraRxBuffer[0] >> 7 ) ; // bit 7 gives the type of gps data
-  oXsGpsLonLat = (((uint32_t) loraRxBuffer[2] ) << 24) | (((uint32_t) loraRxBuffer[3] ) << 16) | (((uint32_t) loraRxBuffer[4] ) << 8) | ((uint32_t) loraRxBuffer[5] ) ;
-  if (oXsGpsLonLat != 0 ) {
-      loraLastGpsPacketReceivedMillis = loraLastPacketReceivedMillis ;
-      if (  oXsPacketType ) {
-        lastGpsLat = oXsGpsLonLat ;
-      } else {
-        lastGpsLon = oXsGpsLonLat ;
-      }
-  }
-  oXsGpsPdop =  (loraRxBuffer[0] >> 3 ) & 0x0F ; // bit 6/3 gives the type of gps precision (normally it is in 0.01 but we put it in 1/128 for faster conversion and we loose decimal)
-  oXsLastGpsDelay = (loraRxBuffer[0]  ) & 0x07 ; // code in 3 bits of the time enlapsed since previous GPS fix at oXs side
-  oXsPacketRssi =  ((int) loraRxBuffer[1]) - 137; // RSSI of last byte received by oXS
-  //Serial.print(oXsPacketType,HEX);
-    //#define DEBUG_OXS_FRAME
-    #ifdef DEBUG_OXS_FRAME
-        for (int i = 0; i < 6; i++) {
-            Serial.print(loraRxBuffer[i], HEX); Serial.print(" ");
-        }
-        Serial.print("Dop=");Serial.print(oXsGpsPdop);
-        Serial.print(" delay=");Serial.print(oXsLastGpsDelay);
-        Serial.print(" rssi=");Serial.print(oXsPacketRssi);
-        Serial.println(" ");
-    #endif
-}
-
-void loraFillTxPacket() {
-  // data to be sent are only 2 byte; the first one is requested Txpower to be used at oXs side
-  uint8_t loraTxBuffer[2] ;
-  loraTxBuffer[0] = 0x55 ; // Type of packet ; currently not used
-  loraTxBuffer[1] = LORA_TX_POWER ; // 0x0F = max power (for first tests; it could be reduced based on RSSI at this side in order to increase the location possibility without GPS
-  loraWriteRegister(LORA_REG_OP_MODE, 0x80 | LORA_STANDBY) ; //  set mode in standby (to write FIFO)
-  loraWriteRegister(LORA_REG_FIFO_ADDR_PTR, 0x80 );        // set FifoAddrPtr to 80 (base adress of byte to transmit)
-  loraWriteRegisterBurst( LORA_REG_FIFO , loraTxBuffer, 2) ; // write the 2 bytes in lora fifo
-}
-
-*/
