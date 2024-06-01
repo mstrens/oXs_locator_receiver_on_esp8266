@@ -99,6 +99,9 @@ Notes:
 * take care to use a E220-900M22S module and not a E220-900T22 (it uses a different protocol and is not compatible)
 * do not forget to connect an antenna to the E220-900M22S module before powering it on (otherwise, it could become out of use)
 * the locator receiver can be powered from 1S lipo or from a 5V source (e.g. 4 nimh).
+
+Do not forget to connect an antenna to the E220 module. If you do not have a real antenna you can solder a wire of 7.5cm to the pin named ANT of the E220. 
+
 ## ------------------ Led -------------------
 When a Wemos D1 mini is used, there is a led on gpio 2 (D4).
 * when led is off, it means that the locator receiver did not get yet (since power on) a connection with an oXs device. So, no data's are available
