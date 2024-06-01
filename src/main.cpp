@@ -1,6 +1,7 @@
 #include "Arduino.h"
-#include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
 #include <WiFiClient.h> // these are  libraries
 #include "lora_receiver.h"
 #include "config.h"
@@ -14,6 +15,12 @@ using namespace std;
 
 uint8_t version[] =   VERSION ;
 bool wifiEnabled = false;
+
+const uint8_t DNS_PORT = 53;
+IPAddress apIP(192, 168, 20, 20);
+DNSServer dnsServer;
+ESP8266WebServer webServer(80);
+/*
 // We set a Static IP address
 IPAddress local_IP LOCAL_IP;
 // We set a Gateway IP address
@@ -25,6 +32,7 @@ ESP8266WebServer server(80);
 // Make a wifi name and password as access points
 const char *ssid = "oXs_locator";
 const char *password = "";
+*/
 
 // led
 #define LED 2         // GPIO 2 on wmos d1 mini
@@ -214,7 +222,8 @@ void response()
     // const String htmlTest = String("<br/>Counter = ") + String(counter) + String("<br/>") ;
     const String htmlRes = HtmlHtml + htmlGpsDelay + htmlGpsData + htmlLast + htmlOxsRssi +
                            htmlLocRssi + htmlLocSnr + HtmlHtmlClose;
-    server.send(200, "text/html", htmlRes);
+    webServer.send(200, "text/html", htmlRes);
+    //server.send(200, "text/html", htmlRes);
 }
 
 void handleLed()
@@ -253,53 +262,75 @@ void handleLed()
 
 void setupWifi()
 {
-    //    static bool alreadyReadHigh = false;
-    //    if (millis() < 5000) return;
-    // we wait to have first a level HIGH (before looking for a low level )
-    //    if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
-    //        alreadyReadHigh = true;
-    //        return;
-    //    }
-    if (millis() < 5000)
-        return;
-    // Serial.print("millis="); Serial.println(millis());
-    if (digitalRead(BUTTON_IN_PULLUP) == 0)
-    {
-        
-        ESP.eraseConfig();
-        WiFi.disconnect();
-        WiFi.setAutoConnect(false);
-        WiFi.setAutoReconnect(false);
-        Serial.print("Setting soft-AP configuration ... ");
-        Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
+  //    static bool alreadyReadHigh = false;
+  //    if (millis() < 5000) return;
+  // we wait to have first a level HIGH (before looking for a low level )
+  //    if ((digitalRead(BUTTON_IN_PULLUP) == 1) and ( alreadyReadHigh == false)) {
+  //        alreadyReadHigh = true;
+  //        return;
+  //    }
+  if (millis() < 5000)
+      return;
+  // Serial.print("millis="); Serial.println(millis());
+  if (digitalRead(BUTTON_IN_PULLUP) == 0)
+  {
+    /*  // here code without dns
+    ESP.eraseConfig();
+    WiFi.disconnect();
+    WiFi.setAutoConnect(false);
+    WiFi.setAutoReconnect(false);
+    Serial.print("Setting soft-AP configuration ... ");
+    Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
 
-        Serial.print("Setting soft-AP ... ");
-        Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!");
-        delay(100);
-        // WiFi.softAP(ssid);
-        // WiFi.softAP(ssid, password, channel, hidden, max_connection)
+    Serial.print("Setting soft-AP ... ");
+    Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!");
+    delay(100);
+    // WiFi.softAP(ssid);
+    // WiFi.softAP(ssid, password, channel, hidden, max_connection)
 
-        Serial.print("Visit this IP address in your browser = ");
-        Serial.println(WiFi.softAPIP());
-        delay(100);
+    Serial.print("Visit this IP address in your browser = ");
+    Serial.println(WiFi.softAPIP());
+    delay(100);
 
-        // WiFi.softAP(ssid, password);
-        // WiFi.softAPConfig (local_IP, gateway, subnet);
-        // IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
-        // Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
-        // Serial.println(ssid);
-        // Serial.print("Visit this IP : ");
-        // Serial.print(apip2); // Prints the IP address of the server to be visited
-        // Serial.println(" in your browser.");
+    // WiFi.softAP(ssid, password);
+    // WiFi.softAPConfig (local_IP, gateway, subnet);
+    // IPAddress apip2 = WiFi.softAPIP(); // Get the IP server
+    // Serial.print("Connect your wifi laptop/mobile phone to this Access Point : ");
+    // Serial.println(ssid);
+    // Serial.print("Visit this IP : ");
+    // Serial.print(apip2); // Prints the IP address of the server to be visited
+    // Serial.println(" in your browser.");
 
-        server.on("/", response);
-        // server.on("/LEDOn", handleLedOn);
-        // server.on("/LEDOff", handleLedOff);
+    server.on("/", response);
+    // server.on("/LEDOn", handleLedOn);
+    // server.on("/LEDOff", handleLedOff);
 
-        server.begin(); // Start the server
-        Serial.println("HTTP server beginned");
-        wifiEnabled = true;
-    }
+    server.begin(); // Start the server
+    Serial.println("HTTP server beginned");
+    wifiEnabled = true;
+    */  
+    WiFi.mode(WIFI_AP);
+    WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+    WiFi.softAP("oXs locator"); // this is the name of the wifi spot
+    // modify TTL associated  with the domain name (in seconds) // default is 60 seconds
+    dnsServer.setTTL(300);
+    // set which return code will be used for all other domains (e.g. sending
+    // ServerFailure instead of NonExistentDomain will reduce number of queries sent by clients)
+    // default is DNSReplyCode::NonExistentDomain
+    dnsServer.setErrorReplyCode(DNSReplyCode::ServerFailure);
+    // start DNS server for a specific domain name
+    dnsServer.start(DNS_PORT, "www.oxs.com", apIP); //this is the name to be entered in the browser
+    // simple HTTP server to see that DNS server is working
+    //webServer.onNotFound(response);
+    webServer.onNotFound([]() {
+      String message = "Hello World!\n\n";
+      message += "URI: ";
+      message += webServer.uri();
+
+      webServer.send(200, "text/plain", message);
+    });
+    webServer.begin();
+  }
 }
 
 
@@ -400,7 +431,10 @@ void loop()
         setupWifi(); // check if wifi button is pressed; when pressed, start wifi and change flag wifiEnabled to true
     if (wifiEnabled)
     {
-        server.handleClient(); // this manage the wifi process (when client connect, it call response())
+      dnsServer.processNextRequest();
+      webServer.handleClient();
+
+        //server.handleClient(); // this manage the wifi process (when client connect, it call response())
     }
 }
 
