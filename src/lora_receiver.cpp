@@ -92,6 +92,12 @@ bool loraSetup()
     uint32_t rfFreq = ((uint64_t)rfFrequency * 33554432UL) / 32000000UL;
     sx126x_setRfFrequency(rfFreq);
 
+    // apply workarround given by semtech
+    uint8_t data[5];
+    sx126x_readRegister(SX126X_REG_TX_CLAMP_CONFIG , data, 1);
+    data[0]= data[0] | 0X1E;
+    sx126x_writeRegister(SX126X_REG_TX_CLAMP_CONFIG , data, 1);
+
     // Set tx power to selected TX power
     Serial.print("Set TX power to ");
     Serial.print(power, DEC);

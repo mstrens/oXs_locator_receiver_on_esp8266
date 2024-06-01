@@ -12,7 +12,7 @@
 
 using namespace std;
 
-
+uint8_t version[] =   VERSION ;
 bool wifiEnabled = false;
 // We set a Static IP address
 IPAddress local_IP LOCAL_IP;
@@ -321,6 +321,8 @@ void setup()
     digitalWrite(LED, statusLed);
     
     delay(2000); // to have time to get first messages
+    Serial.print("\nVersion = "); Serial.println(VERSION);
+
     pinMode(BUTTON_IN_PULLUP, INPUT_PULLUP);
     Serial.println("Press the button to activate the wifi");
 
@@ -332,7 +334,8 @@ void setup()
         oled.begin(&Adafruit128x64, I2C_ADDRESS);
         oled.setFont(System5x7);
         oled.clear();
-        oled.print("Waiting for connection");
+        oled.print("Waiting for connection\n\n   Version\n    ");
+        oled.print(VERSION);
     }
 }
 

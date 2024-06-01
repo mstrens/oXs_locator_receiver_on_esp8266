@@ -6,9 +6,10 @@
 #include <WiFiClient.h>   
 #include "sx126x_driver.h"
 
-#define VERSION 0.1.2
+#define VERSION "0.1.3"
 
  #define DEBUG_LORA_STATE
+
 
 //----------- wiring ------------------------------
 // wiring is predefined on ES8266; do not change it.
