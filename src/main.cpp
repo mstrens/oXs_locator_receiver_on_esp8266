@@ -267,6 +267,9 @@ void setupWifi()
     {
         
         ESP.eraseConfig();
+        WiFi.disconnect();
+        WiFi.setAutoConnect(false);
+        WiFi.setAutoReconnect(false);
         Serial.print("Setting soft-AP configuration ... ");
         Serial.println(WiFi.softAPConfig(local_IP, gateway, subnet) ? "Ready" : "Failed!");
 

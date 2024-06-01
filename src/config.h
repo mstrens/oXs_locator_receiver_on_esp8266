@@ -6,7 +6,7 @@
 #include <WiFiClient.h>   
 #include "sx126x_driver.h"
 
-#define VERSION "0.1.4"
+#define VERSION "0.1.5"
 
  #define DEBUG_LORA_STATE
 
