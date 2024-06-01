@@ -3,26 +3,31 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h> 
 #include <ESP8266WiFi.h> 
-#include <WiFiClient.h>  // these are  libraries 
+#include <WiFiClient.h>   
 #include "sx126x_driver.h"
 
-#define VERSION 0.1.1
-//#define _pinLed  2
-//#define _ledInverted 'N'    // set on Y if you get inverted colors
+#define VERSION 0.1.2
+
+ #define DEBUG_LORA_STATE
+
+//----------- wiring ------------------------------
+// wiring is predefined on ES8266; do not change it.
+// LORA E220-900M22S uses CS=NSS (gpio15=D8) , MOSI (gpio 13=D7), MISO (gpio 12=D6), sclk (gpio 14 = D5), Busy (gpio16, D0 , WAKE)
+// OLED display uses SCL=gpio5=D1 and SDA=gpio4=D2
+// WIFI is activated using a button on gpio 0 (=D3)
+
 
 // ------------- model locator with E220M900S22-------------
 #define SPI_CS 15   // = D8 on wemos d1 mini
 #define LORA_BUSY 16  // = D0 on wemos d1 mini
+#define BUTTON_IN_PULLUP 0  // = D3 on wemos mini D1
 
-// next lines allow to select the frequency being used by the locator (in 3 bytes most, mid, less).
+
+// next lines allow to select the frequency being used by the locator.
 // It must be the same values on oXs side and on locator receiver side
-// We use the same frequency for transmit and receive
 #define LOCATOR_FREQUENCY 868000000UL // in Hz
 
-#define _power 0x10      // use 0x16 for 22 db; power to be used ; must be in range 0/22 (0=2db, 225=22db) because PA is always used
-
-#define _paDutyCycle 0x02 // this is for 17 db; for 22 db, it must be 04
-#define _hpMax 0x03       // this is for 17 db; for 22 db, it must be 07
+#define _power 16      // power to be used in db; max is 22 db; 
 
 // Define modulation parameters setting
 // range increases (and time over the air too) when sf increases and BW decrease 

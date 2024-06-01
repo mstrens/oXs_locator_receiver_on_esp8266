@@ -12,13 +12,6 @@
 
 using namespace std;
 
-// to do
-// check which SPI is used; not sure that sx126X driver use spi1 (for ESP8266)
-// do not forget to define a pin for busy
-// do not forget to connect DI02 to Tx pin to let the module activate the TX
-// check that Rx is High in order to activate the RX lna
-// change the setup of lora to increase the power and use another SF and BW
-// move all parameters in config.h
 
 bool wifiEnabled = false;
 // We set a Static IP address
@@ -75,6 +68,9 @@ String oXsLastGpsDelayText[8] = {"<h2>No GPS data</h2>", "<h2>GPS data received 
                                  "<h2>GPS data received between 1s and 10s ago</h2>", "<h2>GPS data received between 10s and 1m ago</h2>",
                                  "<h2>GPS data received between 1m and 10m ago</h2>", "<h2>GPS data received between 10m and 1h ago</h2>",
                                  "<h2>GPS data received between 1h and 10h ago</h2>", "<h2>GPS data received more than 10h ago</h2>"};
+
+char const *oXsLastGpsDelayTextOled[8] = { "No" , "<1 s" , "<10 s" , "<1 m" ,"<10 m" , "<1 h" , "<10 h" , ">10 h" } ;
+
 
 void convertLonLat(int32_t GPS_LatLon, uint8_t &_degree, uint8_t &_minute, uint8_t &_seconde, uint16_t &_secDec)
 {
@@ -254,8 +250,6 @@ void handleLed()
     digitalWrite(LED, statusLed);
 }
 
-//#define BUTTON_OUT_GROUND 5 // = D1 on Wemos mini D1
-#define BUTTON_IN_PULLUP 0  // = D3 on wemos mini D1
 
 void setupWifi()
 {
@@ -338,7 +332,7 @@ void setup()
         oled.begin(&Adafruit128x64, I2C_ADDRESS);
         oled.setFont(System5x7);
         oled.clear();
-        oled.print("Hello world!");
+        oled.print("Waiting for connection");
     }
 }
 
@@ -448,7 +442,7 @@ void fillOled() {
   oled.print(latSecDec); oled.print("\"");oled.clearToEOL() ;
   
   oled.setCursor(0, 2) ; oled.print("dop "); oled.print(oXsGpsPdop); oled.print( " ") ;
-  oled.setCursor(75, 2) ; oled.print("GPS "); oled.print(oXsLastGpsDelayText[oXsLastGpsDelay]); oled.clearToEOL() ;
+  oled.setCursor(75, 2) ; oled.print("GPS "); oled.print(oXsLastGpsDelayTextOled[oXsLastGpsDelay]); oled.clearToEOL() ;
   oled.setCursor(0, 3) ; oled.print("oXs Rssi = "); oled.print(oXsPacketRssi);  oled.clearToEOL() ;
   //oled.setCursor(0, 4) ; oled.print("Last gps rec.  "); oled.print( ( millis() - loraLastPacketReceivedMillis ) /1000); oled.print( " s") ; oled.clearToEOL() ;
   
@@ -457,35 +451,3 @@ void fillOled() {
   oled.setCursor(75, 7) ;
   oled.print("SNR = "); oled.print(loraRxPacketSnr); oled.clearToEOL() ;
 }
-
-
-
-/*
-String htmlGetLocation = String("<p>Click the button to get your coordinates.</p>") +
-                        String("<button onclick=\"printMsg()\">Msg</button>\n") +
-                        String("<button onclick=\"getLocation()\">Try It</button><n") +
-                        String("<p id=\"mymsg\"></p>\n") +
-
-                        String("<p id=\"demo\"></p>\n") +
-                        String("<script>\n") +
-                        String("\nconst x = document.getElementById(\"demo\");\n") +
-                        String("\nconst y = document.getElementById(\"mymsg\");\n") +
-
-                        String("function printMsg() {\n") +
-                        String("y.innerHTML = \"This is my message\";\n") +
-                        String("}\n")+
-
-                        String("function getLocation() {\n") +
-                        String("if (navigator.geolocation) {\n") +
-                        String("navigator.geolocation.getCurrentPosition(showPosition);\n") +
-                        String("} else {\n") +
-                        String("x.innerHTML = \"Geolocation is not supported by this browser.\";\n") +
-                        String("  }\n") +
-                        String("}\n")+
-
-                        String("function showPosition(position) {\n") +
-                        String("x.innerHTML = \"Latitude: \" + position.coords.latitude + \"<br>Longitude: \" + position.coords.longitude;\n") +
-                        String("}\n") +
-
-                        String("</script>\n") ;
-    */
