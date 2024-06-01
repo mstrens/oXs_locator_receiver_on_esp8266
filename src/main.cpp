@@ -2,7 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
-#include <WiFiClient.h> // these are  libraries
+//#include <WiFiClient.h> // these are  libraries
 #include "lora_receiver.h"
 #include "config.h"
 
@@ -20,7 +20,7 @@ const uint8_t DNS_PORT = 53;
 IPAddress apIP(192, 168, 20, 20);
 DNSServer dnsServer;
 ESP8266WebServer webServer(80);
-/*
+/* this was used before using a dns server
 // We set a Static IP address
 IPAddress local_IP LOCAL_IP;
 // We set a Gateway IP address
@@ -164,7 +164,7 @@ void response()
         {
             htmlLon = String("<h4>Longitude = O ");
         }
-        htmlLon = htmlLon + toNPos(lonDegree, 2) + "&deg " + toNPos(lonMinute, 2) + "' " +
+        htmlLon = htmlLon + toNPos(lonDegree, 3) + "&deg " + toNPos(lonMinute, 2) + "' " +
                   toNPos(lonSeconde, 2) + "." + toNPos0(lonSecDec, 3) + "</h4>";
 
         // Serial.print("lonDegree back= ") ; Serial.println(lonDegree) ;
@@ -177,7 +177,7 @@ void response()
         {
             htmlLat = String("<h4>Longitude = S ");
         }
-        htmlLat = htmlLat + toNPos(latDegree, 2) + "&deg " + toNPos(latMinute, 2) + "' " +
+        htmlLat = htmlLat + toNPos(latDegree, 3) + "&deg " + toNPos(latMinute, 2) + "' " +
                   toNPos(latSeconde, 2) + "." + toNPos0(latSecDec, 3) + "</h4>";
 
         String latLonS = formatLatLongString(lastGpsLat) + String("%2C") + formatLatLongString(lastGpsLon);
@@ -223,7 +223,6 @@ void response()
     const String htmlRes = HtmlHtml + htmlGpsDelay + htmlGpsData + htmlLast + htmlOxsRssi +
                            htmlLocRssi + htmlLocSnr + HtmlHtmlClose;
     webServer.send(200, "text/html", htmlRes);
-    //server.send(200, "text/html", htmlRes);
 }
 
 void handleLed()
@@ -269,7 +268,7 @@ void setupWifi()
   //        alreadyReadHigh = true;
   //        return;
   //    }
-  if (millis() < 5000)
+  if (millis() < 2000)
       return;
   // Serial.print("millis="); Serial.println(millis());
   if (digitalRead(BUTTON_IN_PULLUP) == 0)
@@ -321,7 +320,8 @@ void setupWifi()
     // start DNS server for a specific domain name
     dnsServer.start(DNS_PORT, "www.oxs.com", apIP); //this is the name to be entered in the browser
     // simple HTTP server to see that DNS server is working
-    //webServer.onNotFound(response);
+    webServer.onNotFound(response);
+    /*
     webServer.onNotFound([]() {
       String message = "Hello World!\n\n";
       message += "URI: ";
@@ -329,7 +329,10 @@ void setupWifi()
 
       webServer.send(200, "text/plain", message);
     });
+    */
     webServer.begin();
+    wifiEnabled = true;
+    
   }
 }
 
@@ -359,7 +362,10 @@ void setup()
 
     pinMode(BUTTON_IN_PULLUP, INPUT_PULLUP);
     Serial.println("Press the button to activate the wifi");
-
+    Serial.print("Then connect to wifi spot named 'oXs locator'");
+    Serial.print("Once connect to wifi, start a browser and search for 'oxs.com'");
+    
+    
     Wire.begin();
     Wire.setClock(400000L);
     Wire.beginTransmission(I2C_ADDRESS);

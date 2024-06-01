@@ -49,9 +49,9 @@ This version is different because:
     * the locator receiver store those data's as wel as the quality of the signal received and the time enlapsed since the last received message.
     * to view the data's, you have to look at the display and/or activate the Wifi on the locator receiver.
     * to activate the wifi, press the button connected between D3 (gpio0) and ground.
-        * the locator should then appear as a wifi device on your GSM under the name "oXs_locator".
-        * connect your GSM to oXs_locator. This does not require a password.
-        * once the GSM is connected to oXs_locator wifi server, you have to start your browser and enter as url "192.168.4.1"
+        * the locator should then appear as a wifi device on your GSM under the name "oXs locator".
+        * connect your GSM to oXs locator. This does not require a password.
+        * once the GSM is connected to oXs locator wifi server, you have to start your browser and enter "oxs.com"
         * you should then get some data (e.g. longitude and latitude if oXs has a gps)
         * a link allows you to access a map (via Google Map) to view the location. Still to use this link, you have first to disconnect your GSM from oXS_locator wifi in order to let it access to the web. Once the connection to the web established via e.g. your telephone provider (sim card), you can click on the link to let the GSM display the map.
         * the gsm displays also a link in free text that you can copy/paste to get the same result.  

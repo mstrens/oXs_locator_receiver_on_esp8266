@@ -6,9 +6,9 @@
 #include <WiFiClient.h>   
 #include "sx126x_driver.h"
 
-#define VERSION "0.1.6"
+#define VERSION "0.1.7"
 
- #define DEBUG_LORA_STATE
+//#define DEBUG_LORA_STATE
 
 
 //----------- wiring ------------------------------
@@ -42,25 +42,15 @@
 #define _preambleLength  12                // 12 bytes preamble
 
 //**************** wifi ***************************
+/* this is not used with the dns version
 // We set a Static IP address
 #define LOCAL_IP (192, 168, 4, 1)  
 // We set a Gateway IP address
 #define GATEWAY (192, 168, 4, 2)
 #define SUBNET (255, 255, 255, 0)
-
+*/
 
 // --------- Reserve for developer. ---------
-#define CONFIG_VERSION 8
-
-struct CONFIG{
-    // Led
-    uint8_t pinLed ; 
-    // for Lora locator
-    uint8_t pinSpiCs;
-    uint8_t pinSpiSck;
-    uint8_t pinSpiMosi;
-    uint8_t pinSpiMiso;
-};
 
 enum LEDState{
     STATE_NO_SIGNAL = 0,
