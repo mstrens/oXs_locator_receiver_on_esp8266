@@ -6,7 +6,7 @@
 #include <WiFiClient.h>   
 #include "sx126x_driver.h"
 
-#define VERSION "0.1.7"
+#define VERSION "0.1.8"
 
 //#define DEBUG_LORA_STATE
 
@@ -28,7 +28,7 @@
 // It must be the same values on oXs side and on locator receiver side
 #define LOCATOR_FREQUENCY 868000000UL // in Hz
 
-#define _power 16      // power to be used in db; max is 22 db; 
+#define _power 22      // power to be used in db; max is 22 db; 
 
 // Define modulation parameters setting
 // range increases (and time over the air too) when sf increases and BW decrease 

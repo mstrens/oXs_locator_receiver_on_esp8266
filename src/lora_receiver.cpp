@@ -224,9 +224,11 @@ void loraDecodeFrame()
     }
     oXsGpsPdop = (loraRxBuffer[0] >> 3) & 0x0F;   // bit 6/3 gives the type of gps precision (normally it is in 0.01 but we put it in 1/128 for faster conversion and we loose decimal)
     oXsLastGpsDelay = (loraRxBuffer[0]) & 0x07;   // code in 3 bits of the time enlapsed since previous GPS fix at oXs side
-    oXsPacketRssi = ((int)loraRxBuffer[1]) - 137; // RSSI of last byte received by oXS
+    //oXsPacketRssi = ((int)loraRxBuffer[1]) - 137; // RSSI of last byte received by oXS with a RFM95
                                                   // Serial.print(oXsPacketType,HEX);
                                                   // #define DEBUG_OXS_FRAME
+    oXsPacketRssi = 0 - (((int)loraRxBuffer[1]) >> 1); // rssi value = - U8/2
+
 #ifdef DEBUG_OXS_FRAME
     for (int i = 0; i < 6; i++)
     {
